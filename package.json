@@ -26,13 +26,32 @@
       "editor/context": [
         {
           "when": "isInDiffEditor",
-          "command": "custom-unstage-revert.unstage"
+          "command": "custom-unstage-revert.unstage",
+          "group": "3_compare"
         },
         {
           "when": "isInDiffEditor",
-          "command": "custom-unstage-revert.revert"
+          "command": "custom-unstage-revert.revert",
+          "group": "3_compare"
         }
       ]
+    },
+    "configuration": {
+      "title": "Custom unstage/revert",
+      "properties": {
+        "custom-unstage-revert.regexps": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Regexp"
+          },
+          "default": [
+            "<locationX>.*<\/locationX>",
+            "<locationY>.*<\/locationY>"
+          ],
+          "description": "List of regexps to evaluate when unstaging / reverting."
+        }
+      }
     }
   },
   "scripts": {
