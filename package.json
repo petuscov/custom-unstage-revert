@@ -20,6 +20,10 @@
       {
         "command": "custom-unstage-revert.revert",
         "title": "Revert with configured regexps"
+      },
+      {
+        "command": "cowsay.say",
+        "title": "Test VACA"
       }
     ],
     "menus": {
@@ -54,6 +58,9 @@
       }
     }
   },
+  "extensionDependencies": [
+    "vscode.git"
+  ],
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
