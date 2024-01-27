@@ -13,7 +13,7 @@ export function activate(context: vscode.ExtensionContext) {
 		try {
 			const gitExtension = vscode.extensions.getExtension<GitExtension>('vscode.git')?.exports;
 			const gitAPI = gitExtension.getAPI(1);
-			const currentRepo = gitAPI.repositories[0]; // Sólo los psicópatas abren más de un repositorio en vsCode.
+			const currentRepo = gitAPI.repositories[0].repository; // Sólo los psicópatas abren más de un repositorio en vsCode.
 
 			const currentFileUri = vscode.window.activeTextEditor?.document.uri;
 			const currentFilePath = currentFileUri?.fsPath;
@@ -35,10 +35,8 @@ export function activate(context: vscode.ExtensionContext) {
 			// Igual nos sirve stage con el contenido que queremos: 
 			// https://github.com/microsoft/vscode/blob/main/extensions/git/src/repository.ts#L1218
 			
-			// !!!.
-			// TypeError: currentRepo.stage is not a function
-
-			currentRepo.stage(currentFilePath, newFileContentUint8);
+			currentRepo.stage(currentFileUri, newFileContentUint8);
+			// TODO: No es exáctamente lo que queremos... queremos mantener contenido previo, no eliminar de la misma manera que en revert.
 
 			// TODO:
 			// The event emitter has a fire method which can be used to notify VS Code when a change has happened in a document. The document which has changed is identified by its uri given as argument to the fire method.
