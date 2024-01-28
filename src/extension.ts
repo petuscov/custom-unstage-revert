@@ -1,78 +1,52 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
 	let disposableUnstage = vscode.commands.registerCommand('custom-unstage-revert.unstage', async () => {
 		try {
-			const gitExtension = vscode.extensions.getExtension<GitExtension>('vscode.git')?.exports;
-			const gitAPI = gitExtension.getAPI(1);
-			const currentRepo = gitAPI.repositories[0].repository; // Sólo los psicópatas abren más de un repositorio en vsCode.
-
+			const activeEditor : vscode.TextEditor = vscode.window.activeTextEditor as vscode.TextEditor;
 			const currentFileUri = vscode.window.activeTextEditor?.document.uri;
-			const currentFilePath = currentFileUri?.fsPath;
-			console.log({currentFilePath});
-			const fileContentUint8 = await vscode.workspace.fs.readFile(currentFileUri as vscode.Uri);
-		
-			let textContent = new TextDecoder().decode(fileContentUint8);
-			let regexps = vscode.workspace.getConfiguration('custom-unstage-revert').regexps;
-
-			// ¿Se podría llegar a conseguir sin necesidad de decodear y encodear, teniendo en cuenta unsignedint info?
-			// podría llegar a ser más eficiente.
-
-			regexps.forEach((regexp : string) => {
-				textContent = textContent.replaceAll(new RegExp(regexp, "g"), '');
-			});
-
-			const newFileContentUint8 = new TextEncoder().encode(textContent);
-
-			// Igual nos sirve stage con el contenido que queremos: 
-			// https://github.com/microsoft/vscode/blob/main/extensions/git/src/repository.ts#L1218
 			
-			currentRepo.stage(currentFileUri, newFileContentUint8);
-			// TODO: No es exáctamente lo que queremos... queremos mantener contenido previo, no eliminar de la misma manera que en revert.
+			var selectionsOfRegexps = await getSelectionOfPositionsOfRegexps(currentFileUri as vscode.Uri);
+			var currentSelection;
 
-			// TODO:
-			// The event emitter has a fire method which can be used to notify VS Code when a change has happened in a document. The document which has changed is identified by its uri given as argument to the fire method.
+			activeEditor.selections = selectionsOfRegexps;
+			
+			// Hemos probado a unstagear / revertear con selecciones independientes, y no funciona, por lo que el comando tampoco funcionará.
+			// Quizás al unstagear de manera secuencial se pierdan índices de líneas correctas, razón por la cual comenzamos por el final.
+			for(var i = activeEditor.selections.length - 1; i > 0; i--){
+				currentSelection = activeEditor.selections[i];
+				await vscode.commands.executeCommand<vscode.Location[]>(
+					'git.unstageSelectedRanges',
+					currentFileUri,
+					currentSelection
+				);
+			}
 		} catch(error){
 			console.error('error: ' + error);
 		}
 	});
 	
-	/** 
-	 * revert en API/extensión de git es comando completo (se revierte el documento entero, no admite
-	 * parámetro de contenido). por ello, lo que necesitamos es actualizar archivo directamente.
-	 * https://github.com/microsoft/vscode/blob/main/extensions/git/src/repository.ts#L1227
-	 */
 	let disposableRevert = vscode.commands.registerCommand('custom-unstage-revert.revert', async () => {
 		try {
+			const activeEditor : vscode.TextEditor = vscode.window.activeTextEditor as vscode.TextEditor;
 			const currentFileUri = vscode.window.activeTextEditor?.document.uri;
-			const currentFilePath = currentFileUri?.fsPath;
-			console.log({currentFilePath});
-			const fileContentUint8 = await vscode.workspace.fs.readFile(currentFileUri as vscode.Uri);
-		
-			let textContent = new TextDecoder().decode(fileContentUint8);
-			let regexps = vscode.workspace.getConfiguration('custom-unstage-revert').regexps;
+			
+			var selectionsOfRegexps = await getSelectionOfPositionsOfRegexps(currentFileUri as vscode.Uri);
+			var currentSelection;
 
-			// ¿Se podría llegar a conseguir sin necesidad de decodear y encodear, teniendo en cuenta unsignedint info?
-			// podría llegar a ser más eficiente.
-
-			regexps.forEach((regexp : string) => {
-				textContent = textContent.replaceAll(new RegExp(regexp, "g"), '');
-			});
-
-			const newFileContentUint8 = new TextEncoder().encode(textContent);
-
-			await vscode.workspace.fs.writeFile(currentFileUri as vscode.Uri, newFileContentUint8);
-
-			// ¿Necesario? fs debería encargarse por debajo.
-			// The event emitter has a fire method which can be used to notify VS Code when a change has happened in a document. The document which has changed is identified by its uri given as argument to the fire method.
+			activeEditor.selections = selectionsOfRegexps;
+			
+			// Hemos probado a unstagear / revertear con selecciones independientes, y no funciona, por lo que el comando tampoco funcionará.
+			// Quizás al unstagear de manera secuencial se pierdan índices de líneas correctas, razón por la cual comenzamos por el final.
+			for(var i = activeEditor.selections.length - 1; i > 0; i--){
+				currentSelection = activeEditor.selections[i];
+				await vscode.commands.executeCommand<vscode.Location[]>(
+					'git.revertSelectedRanges',
+					currentFileUri,
+					currentSelection
+				);
+			}
 		} catch(error){
 			console.error('Congratulations, your extension "custom-unstage-revert" is now active!');
 		}
@@ -82,15 +56,65 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(disposableRevert);
 
 	var testUris = vscode.commands.registerCommand('cowsay.say', async () => {
+		const activeEditor : vscode.TextEditor = vscode.window.activeTextEditor as vscode.TextEditor;
 		const currentFileUri = vscode.window.activeTextEditor?.document.uri;
-		const currentFilePath = currentFileUri?.fsPath;
-		console.log({currentFilePath});
-		let fileContent = await vscode.workspace.fs.readFile(currentFileUri as vscode.Uri);
-		console.log({fileContent});
+		
+		var selectionsOfRegexps = await getSelectionOfPositionsOfRegexps(currentFileUri as vscode.Uri);
+		activeEditor.selections = selectionsOfRegexps;
 	  });
 
 	context.subscriptions.push(testUris);
 
+}
+
+/**
+ * Devuelve las selecciones correspondientes a las posiciones (indexs de carácteres) de un texto.
+ * Idealmente debería devolver selección completa, para respetar regexps que abarquen más de una línea.
+ */
+async function getSelectionOfPositionsOfRegexps(currentFileUri: vscode.Uri) : Promise<vscode.Selection[]> {
+	const fileContentUint8 = await vscode.workspace.fs.readFile(currentFileUri as vscode.Uri);
+
+	let textContent = new TextDecoder().decode(fileContentUint8);
+
+	const activeEditor : vscode.TextEditor = vscode.window.activeTextEditor as vscode.TextEditor;
+	let regexps = vscode.workspace.getConfiguration('custom-unstage-revert').regexps;
+
+	var iterator = textContent.matchAll(new RegExp(regexps[0], "g"));
+	activeEditor.selections = [];
+	var foundMatch = iterator.next();
+	var value;
+		
+	var positions : number[] = [];
+
+	while(!foundMatch.done){
+		value = foundMatch.value;
+		positions.push(value.index as number);
+		// idealmente guardar objeto para tener tb length...
+		//positions.push({init: value.index, length: value[0].length});
+		foundMatch = iterator.next();
+	}
+
+	// Idealmente deberíamos usar length para aquellas regexps que abarquen más de una línea..
+
+	var lineIndexs = [];
+	var currentLineIndex = 0;
+	var nextPos = positions.shift();
+	var character;
+
+	for(var characterPos = 0; characterPos<textContent.length && nextPos !== undefined; characterPos++){
+		character = textContent.charAt(characterPos);	
+		if(character === '\n'){currentLineIndex++;}
+		if(nextPos === characterPos){lineIndexs.push(currentLineIndex); nextPos = positions.shift();}
+	}
+
+	var selections : vscode.Selection[] = [];
+
+	lineIndexs.forEach(lineIndex => {
+		// Línea inicio, caracter inicio, línea fin, caracter fin.
+		selections.push(new vscode.Selection(lineIndex, 0, lineIndex, 1));
+	});
+
+	return selections;
 }
 
 // This method is called when your extension is deactivated
