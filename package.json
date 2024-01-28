@@ -1,7 +1,7 @@
 {
   "name": "custom-unstage-revert",
   "displayName": "Custom unstage/revert",
-  "description": "Allow to set up regexps to easily unstage/revert pieces of code. (WIP - Beta)",
+  "description": "Allow to set up regexps to easily unstage/revert pieces of code.",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.85.0"
@@ -20,10 +20,6 @@
       {
         "command": "custom-unstage-revert.revert",
         "title": "Revert with configured regexps"
-      },
-      {
-        "command": "cowsay.say",
-        "title": "Test VACA"
       }
     ],
     "menus": {
