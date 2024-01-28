@@ -3,6 +3,7 @@
   "displayName": "Custom unstage/revert",
   "description": "Allow to set up regexps to easily unstage/revert pieces of code.",
   "version": "0.0.1",
+  "repository": "https://github.com/petuscov/custom-unstage-revert",
   "engines": {
     "vscode": "^1.85.0"
   },
