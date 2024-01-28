@@ -14,7 +14,7 @@ export function activate(context: vscode.ExtensionContext) {
 			
 			// Hemos probado a unstagear / revertear con selecciones independientes, y no funciona, por lo que el comando tampoco funcionará.
 			// Quizás al unstagear de manera secuencial se pierdan índices de líneas correctas, razón por la cual comenzamos por el final.
-			for(var i = activeEditor.selections.length - 1; i > 0; i--){
+			for(var i = activeEditor.selections.length - 1; i >= 0; i--){
 				currentSelection = activeEditor.selections[i];
 				await vscode.commands.executeCommand<vscode.Location[]>(
 					'git.unstageSelectedRanges',
@@ -39,7 +39,7 @@ export function activate(context: vscode.ExtensionContext) {
 			
 			// Hemos probado a unstagear / revertear con selecciones independientes, y no funciona, por lo que el comando tampoco funcionará.
 			// Quizás al unstagear de manera secuencial se pierdan índices de líneas correctas, razón por la cual comenzamos por el final.
-			for(var i = activeEditor.selections.length - 1; i > 0; i--){
+			for(var i = activeEditor.selections.length - 1; i >= 0; i--){
 				currentSelection = activeEditor.selections[i];
 				await vscode.commands.executeCommand<vscode.Location[]>(
 					'git.revertSelectedRanges',
@@ -54,17 +54,6 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(disposableUnstage);
 	context.subscriptions.push(disposableRevert);
-
-	var testUris = vscode.commands.registerCommand('cowsay.say', async () => {
-		const activeEditor : vscode.TextEditor = vscode.window.activeTextEditor as vscode.TextEditor;
-		const currentFileUri = vscode.window.activeTextEditor?.document.uri;
-		
-		var selectionsOfRegexps = await getSelectionOfPositionsOfRegexps(currentFileUri as vscode.Uri);
-		activeEditor.selections = selectionsOfRegexps;
-	  });
-
-	context.subscriptions.push(testUris);
-
 }
 
 /**

@@ -1,0 +1,3 @@
+TODAVÍA ES NECESARIO TESTEAR BIEN...
+
+await en for funcionando bien? ¿hay que darle más tiempo al comando de unstage / revert? ¿Hay que esperar a evento de cambios en archivo?
