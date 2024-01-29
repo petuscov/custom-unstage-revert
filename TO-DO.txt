@@ -1,3 +1,4 @@
-TODAVÍA ES NECESARIO TESTEAR BIEN...
 
-await en for funcionando bien? ¿hay que darle más tiempo al comando de unstage / revert? ¿Hay que esperar a evento de cambios en archivo?
+Fixes varios. Seguir testeando.
+
+Se podría llegar a incluir un check en la configuración para únicamente seleccionar, sin revertear ni stagear.

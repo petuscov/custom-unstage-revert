@@ -9,13 +9,12 @@ export function activate(context: vscode.ExtensionContext) {
 			
 			var selectionsOfRegexps = await getSelectionOfPositionsOfRegexps(currentFileUri as vscode.Uri);
 			var currentSelection;
-
-			activeEditor.selections = selectionsOfRegexps;
-			
+	
 			// Hemos probado a unstagear / revertear con selecciones independientes, y no funciona, por lo que el comando tampoco funcionará.
 			// Quizás al unstagear de manera secuencial se pierdan índices de líneas correctas, razón por la cual comenzamos por el final.
-			for(var i = activeEditor.selections.length - 1; i >= 0; i--){
-				currentSelection = activeEditor.selections[i];
+			for(var i = selectionsOfRegexps.length - 1; i >= 0; i--){
+				currentSelection = selectionsOfRegexps[i];
+				activeEditor.selections = [currentSelection];
 				await vscode.commands.executeCommand<vscode.Location[]>(
 					'git.unstageSelectedRanges',
 					currentFileUri,
@@ -34,12 +33,11 @@ export function activate(context: vscode.ExtensionContext) {
 			
 			var selectionsOfRegexps = await getSelectionOfPositionsOfRegexps(currentFileUri as vscode.Uri);
 			var currentSelection;
-
-			activeEditor.selections = selectionsOfRegexps;
 			
 			// Hemos probado a unstagear / revertear con selecciones independientes, y no funciona, por lo que el comando tampoco funcionará.
 			// Quizás al unstagear de manera secuencial se pierdan índices de líneas correctas, razón por la cual comenzamos por el final.
-			for(var i = activeEditor.selections.length - 1; i >= 0; i--){
+			for(var i = selectionsOfRegexps.length - 1; i >= 0; i--){
+				currentSelection = selectionsOfRegexps[i];
 				currentSelection = activeEditor.selections[i];
 				await vscode.commands.executeCommand<vscode.Location[]>(
 					'git.revertSelectedRanges',
@@ -65,23 +63,23 @@ async function getSelectionOfPositionsOfRegexps(currentFileUri: vscode.Uri) : Pr
 
 	let textContent = new TextDecoder().decode(fileContentUint8);
 
-	const activeEditor : vscode.TextEditor = vscode.window.activeTextEditor as vscode.TextEditor;
 	let regexps = vscode.workspace.getConfiguration('custom-unstage-revert').regexps;
-
-	var iterator = textContent.matchAll(new RegExp(regexps[0], "g"));
-	activeEditor.selections = [];
-	var foundMatch = iterator.next();
-	var value;
-		
 	var positions : number[] = [];
+	var value;
 
-	while(!foundMatch.done){
-		value = foundMatch.value;
-		positions.push(value.index as number);
-		// idealmente guardar objeto para tener tb length...
-		//positions.push({init: value.index, length: value[0].length});
-		foundMatch = iterator.next();
+	for(let regexp of regexps){
+		var iterator = textContent.matchAll(new RegExp(regexp, "g"));
+		var foundMatch = iterator.next();
+
+		while(!foundMatch.done){
+			value = foundMatch.value;
+			positions.push(value.index as number);
+			// idealmente guardar objeto para tener tb length...
+			//positions.push({init: value.index, length: value[0].length});
+			foundMatch = iterator.next();
+		}
 	}
+	positions = positions.sort((charIndexA,charIndexB)=>{return charIndexA > charIndexB ? 1 : -1});
 
 	// Idealmente deberíamos usar length para aquellas regexps que abarquen más de una línea..
 
@@ -104,6 +102,12 @@ async function getSelectionOfPositionsOfRegexps(currentFileUri: vscode.Uri) : Pr
 	});
 
 	return selections;
+}
+
+async function wait(miliSeconds: number){
+	return new Promise((resolve)=>{
+		setTimeout(resolve, miliSeconds);
+	});
 }
 
 // This method is called when your extension is deactivated
