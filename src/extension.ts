@@ -20,6 +20,7 @@ export function activate(context: vscode.ExtensionContext) {
 					currentFileUri,
 					currentSelection
 				);
+				// await wait(2000);
 			}
 		} catch(error){
 			console.error('error: ' + error);
@@ -44,6 +45,7 @@ export function activate(context: vscode.ExtensionContext) {
 					currentFileUri,
 					currentSelection
 				);
+				await wait(100);
 			}
 		} catch(error){
 			console.error('Congratulations, your extension "custom-unstage-revert" is now active!');

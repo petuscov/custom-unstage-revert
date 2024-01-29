@@ -1,4 +1,5 @@
 
 Fixes varios. Seguir testeando.
+Sigue funcionando raro el timing. con await y timer no se soluciona... 
 
 Se podría llegar a incluir un check en la configuración para únicamente seleccionar, sin revertear ni stagear.
