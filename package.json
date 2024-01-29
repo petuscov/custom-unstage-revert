@@ -2,7 +2,7 @@
   "name": "custom-unstage-revert",
   "displayName": "Custom unstage/revert",
   "description": "Allow to set up regexps to easily unstage/revert pieces of code.",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "repository": "https://github.com/petuscov/custom-unstage-revert",
   "publisher": "petuscov",
   "engines": {
@@ -48,8 +48,8 @@
             "description": "Regexp"
           },
           "default": [
-            "<locationX>.*<\/locationX>",
-            "<locationY>.*<\/locationY>"
+            "<locationX>.*</locationX>",
+            "<locationY>.*</locationY>"
           ],
           "description": "List of regexps to evaluate when unstaging / reverting."
         }
